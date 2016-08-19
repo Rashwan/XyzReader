@@ -113,9 +113,9 @@ public class ArticleDetailFragment extends Fragment implements
             @Override
             public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
 
-                if (scrollY > oldScrollY & !isImmersive){
+                if (scrollY > oldScrollY && !isImmersive){
                     hideSystemUI(decorView);
-                }else if (scrollY < oldScrollY & isImmersive){
+                }else if (scrollY < oldScrollY && isImmersive){
                     showSystemUI(decorView);
                 }
             }
