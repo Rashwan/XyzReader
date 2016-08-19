@@ -9,7 +9,9 @@ import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
@@ -45,6 +47,9 @@ public class ArticleDetailFragment extends Fragment implements
     private ImageView mPhotoView;
     private boolean mIsCard = false;
     private Toolbar toolbar;
+    private NestedScrollView scrollView;
+    private CoordinatorLayout coordinatorLayout;
+    private Boolean isImmersive = false;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -97,7 +102,21 @@ public class ArticleDetailFragment extends Fragment implements
 
 
         collapsingToolbar = (CollapsingToolbarLayout) mRootView.findViewById(R.id.collapsing_toolbar_layout);
+        coordinatorLayout = (CoordinatorLayout) mRootView.findViewById(R.id.coordinator_layout);
 
+        final View decorView = getActivity().getWindow().getDecorView();
+        scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
+        scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+
+                if (scrollY > oldScrollY & !isImmersive){
+                    hideSystemUI(decorView);
+                }else if (scrollY < oldScrollY & isImmersive){
+                    showSystemUI(decorView);
+                }
+            }
+        });
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
 
 
@@ -113,21 +132,6 @@ public class ArticleDetailFragment extends Fragment implements
 
         bindViews();
         return mRootView;
-    }
-
-
-    static float progress(float v, float min, float max) {
-        return constrain((v - min) / (max - min), 0, 1);
-    }
-
-    static float constrain(float val, float min, float max) {
-        if (val < min) {
-            return min;
-        } else if (val > max) {
-            return max;
-        } else {
-            return val;
-        }
     }
 
     private void bindViews() {
@@ -202,5 +206,15 @@ public class ArticleDetailFragment extends Fragment implements
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
         mCursor = null;
         bindViews();
+    }
+
+    private void hideSystemUI(View decorView) {
+        isImmersive = true;
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+    }
+
+    private void showSystemUI(View decorView) {
+        isImmersive  = false;
+        decorView.setSystemUiVisibility(0);
     }
 }
