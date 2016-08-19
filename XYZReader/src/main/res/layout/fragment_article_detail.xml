@@ -4,7 +4,8 @@
     android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+    android:background="#E0E0E0">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
@@ -53,9 +54,7 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:maxWidth="@dimen/detail_card_max_width"
-                android:background="#fff"
-                android:elevation="2dp">
+                android:maxWidth="@dimen/detail_card_max_width">
 
 
                 <LinearLayout
@@ -86,7 +85,7 @@
                         style="?android:attr/textAppearanceSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#000" />
+                        android:textColor="#424242" />
                 </LinearLayout>
 
 
@@ -99,7 +98,7 @@
                     android:layout_marginRight="@dimen/detail_inner_horiz_margin"
                     android:paddingBottom="@dimen/detail_body_bottom_margin"
                     android:textColor="@color/primary_text"
-                    android:textColorLink="@color/accent"
+                    android:textColorLink="@color/primary_dark"
                     android:textSize="@dimen/detail_body_text_size"
                     android:lineSpacingMultiplier="@fraction/detail_body_line_spacing_multiplier" />
 
