@@ -19,7 +19,7 @@
             app:contentScrim="?attr/colorPrimary"
             app:expandedTitleMarginStart="34dp"
             app:expandedTitleMarginBottom="15dp"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             app:titleEnabled="false">
                 <ImageView
                     android:id="@+id/photo"
@@ -35,7 +35,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     app:layout_collapseMode="pin"
-                    android:title=""/>
+                    />
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
