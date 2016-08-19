@@ -103,6 +103,7 @@ public class ArticleDetailFragment extends Fragment implements
         toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_details);
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
         ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("");
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
         mScrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
