@@ -6,10 +6,12 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +24,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -42,17 +45,22 @@ public class ArticleDetailFragment extends Fragment implements
     private static final String TAG = "ArticleDetailFragment";
 
     public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_TRANSITION_NAME = "ARG_TRANSITION_NAME";
+    public static final String ARG_ARTICLE_IMAGE_POSITION = "ARG_ARTICLE_IMAGE_POSITION";
+    public static final String ARG_STARTING_ARTICLE_IMAGE_POSITION = "ARG_STARTING_ARTICLE_IMAGE_POSITION";
 
     private Cursor mCursor;
     private long mItemId;
     private View mRootView;
     private CollapsingToolbarLayout collapsingToolbar;
     private ImageView mPhotoView;
-    private boolean mIsCard = false;
     private Toolbar toolbar;
     private NestedScrollView scrollView;
-    private CoordinatorLayout coordinatorLayout;
     private Boolean isImmersive = false;
+    private String transitionName;
+    private Boolean isSet = false;
+    private int position;
+    private int startingPosition;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -61,9 +69,12 @@ public class ArticleDetailFragment extends Fragment implements
     public ArticleDetailFragment() {
     }
 
-    public static ArticleDetailFragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId,String transitionName,int position,int startingPosition) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
+        arguments.putString(ARG_TRANSITION_NAME,transitionName);
+        arguments.putInt(ARG_ARTICLE_IMAGE_POSITION,position);
+        arguments.putInt(ARG_STARTING_ARTICLE_IMAGE_POSITION,startingPosition);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -73,11 +84,12 @@ public class ArticleDetailFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
-            mItemId = getArguments().getLong(ARG_ITEM_ID);
-        }
+        mItemId = getArguments().getLong(ARG_ITEM_ID);
+        transitionName = getArguments().getString(ARG_TRANSITION_NAME);
+        position = getArguments().getInt(ARG_ARTICLE_IMAGE_POSITION);
+        startingPosition = getArguments().getInt(ARG_STARTING_ARTICLE_IMAGE_POSITION);
 
-        mIsCard = getResources().getBoolean(R.bool.detail_is_card);
+
         setHasOptionsMenu(true);
     }
 
@@ -105,7 +117,6 @@ public class ArticleDetailFragment extends Fragment implements
 
 
         collapsingToolbar = (CollapsingToolbarLayout) mRootView.findViewById(R.id.collapsing_toolbar_layout);
-        coordinatorLayout = (CoordinatorLayout) mRootView.findViewById(R.id.coordinator_layout);
 
         final View decorView = getActivity().getWindow().getDecorView();
         scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
@@ -121,6 +132,12 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
+        mPhotoView.setTransitionName(transitionName);
+
+
+
+
+
 
 
         mRootView.findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
@@ -165,19 +182,21 @@ public class ArticleDetailFragment extends Fragment implements
                             Bitmap bitmap = imageContainer.getBitmap();
                             if (bitmap != null) {
                                 mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                                Palette palette = new Palette.Builder(bitmap).generate();
-                                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
-                                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                                if (vibrantSwatch!= null && collapsingToolbar!= null){
-                                    collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
-                                }
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    if (darkVibrantSwatch != null && getActivity() != null) {
-                                        Window window = getActivity().getWindow();
-                                        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                                        window.setStatusBarColor(darkVibrantSwatch.getRgb());
-                                    }
-                                }
+//                                startPostponedEnterTransition();
+//
+//                                Palette palette = new Palette.Builder(bitmap).generate();
+//                                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
+//                                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+//                                if (vibrantSwatch!= null && collapsingToolbar!= null){
+//                                    collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
+//                                }
+//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                                    if (darkVibrantSwatch != null && getActivity() != null) {
+//                                        Window window = getActivity().getWindow();
+//                                        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+//                                        window.setStatusBarColor(darkVibrantSwatch.getRgb());
+//                                    }
+//                                }
 
 
                             }
@@ -215,6 +234,7 @@ public class ArticleDetailFragment extends Fragment implements
             mCursor.close();
             mCursor = null;
         }
+        loadThumbImage();
 
         bindViews();
     }
@@ -233,5 +253,69 @@ public class ArticleDetailFragment extends Fragment implements
     private void showSystemUI(View decorView) {
         isImmersive  = false;
         decorView.setSystemUiVisibility(0);
+    }
+    private void startPostponedEnterTransition() {
+        if (position == startingPosition)
+        mPhotoView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                mPhotoView.getViewTreeObserver().removeOnPreDrawListener(this);
+                getActivity().startPostponedEnterTransition();
+                return true;
+            }
+        });
+
+    }
+    @Nullable
+    ImageView getAlbumImage() {
+        if (isViewInBounds(getActivity().getWindow().getDecorView(), mPhotoView)) {
+            return mPhotoView;
+        }
+        return null;
+    }
+
+
+    /**
+     * Returns true if {@param view} is contained within {@param container}'s bounds.
+     */
+    private static boolean isViewInBounds(@NonNull View container, @NonNull View view) {
+        Rect containerBounds = new Rect();
+        container.getHitRect(containerBounds);
+        return view.getLocalVisibleRect(containerBounds);
+    }
+
+    private void loadThumbImage(){
+        ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
+                .get(mCursor.getString(ArticleLoader.Query.THUMB_URL), new ImageLoader.ImageListener() {
+                    @Override
+                    public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
+                        Bitmap bitmap = imageContainer.getBitmap();
+                        if (bitmap != null) {
+                            mPhotoView.setImageBitmap(imageContainer.getBitmap());
+                            startPostponedEnterTransition();
+
+                            Palette palette = new Palette.Builder(bitmap).generate();
+                            Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
+                            Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+                            if (vibrantSwatch!= null && collapsingToolbar!= null){
+                                collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                if (darkVibrantSwatch != null && getActivity() != null) {
+                                    Window window = getActivity().getWindow();
+                                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                                    window.setStatusBarColor(darkVibrantSwatch.getRgb());
+                                }
+                            }
+
+
+                        }
+                    }
+
+                    @Override
+                    public void onErrorResponse(VolleyError volleyError) {
+
+                    }
+                });
     }
 }
