@@ -108,13 +108,14 @@ public class ArticleDetailFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+        final View decorView = getActivity().getWindow().getDecorView();
 
+        showSystemUI(decorView);
         toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_details);
 
 
         collapsingToolbar = (CollapsingToolbarLayout) mRootView.findViewById(R.id.collapsing_toolbar_layout);
 
-        final View decorView = getActivity().getWindow().getDecorView();
         NestedScrollView scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
         scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
             @Override
@@ -260,7 +261,7 @@ public class ArticleDetailFragment extends Fragment implements
             @Override
             public boolean onPreDraw() {
                 mPhotoView.getViewTreeObserver().removeOnPreDrawListener(this);
-                ((AppCompatActivity)getActivity()).supportStartPostponedEnterTransition();
+                getActivity().supportStartPostponedEnterTransition();
                 return true;
             }
         });
@@ -309,7 +310,6 @@ public class ArticleDetailFragment extends Fragment implements
                                 }
                             }
                         }
-
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
 
