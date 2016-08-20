@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.app.SharedElementCallback;
 import android.support.v4.view.ViewPager;
@@ -15,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
@@ -37,31 +40,31 @@ public class ArticleDetailActivity extends AppCompatActivity
     private String transitionName;
     private int currentPosition;
     public final static String EXTRA_SHARED_TRANSITION = "com.example.xyzreader.ui.EXTRA_SHARED_TRANSITION";
-    public final static String EXTRA_CURRENT_POSITION = "com.example.xyzreader.ui.EXTRA_CURRENT_POSITION";
     private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
 
-    private boolean mIsReturning = false;
-    private ArticleDetailFragment mCurrentDetailsFragment;
-    private final SharedElementCallback mCallback = new SharedElementCallback() {
+    private boolean isReturning = false;
+    private ArticleDetailFragment currentDetailsFragment;
+    private final SharedElementCallback callback = new SharedElementCallback() {
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-            if (mIsReturning) {
-//                ImageView sharedElement = mCurrentDetailsFragment.getAlbumImage();
-//                if (sharedElement == null) {
-//                    // If shared element is null, then it has been scrolled off screen and
-//                    // no longer visible. In this case we cancel the shared element transition by
-//                    // removing the shared element from the shared elements map.
-//                    names.clear();
-//                    sharedElements.clear();
-//                } else if (mStartingPosition != mCurrentPosition) {
-//                    // If the user has swiped to a different ViewPager page, then we need to
-//                    // remove the old shared element and replace it with the new shared element
-//                    // that should be transitioned instead.
-//                    names.clear();
-//                    names.add(sharedElement.getTransitionName());
-//                    sharedElements.clear();
-//                    sharedElements.put(sharedElement.getTransitionName(), sharedElement);
-//                }
+            if (isReturning) {
+                ImageView sharedElement = currentDetailsFragment.getArticleImage();
+                if (sharedElement == null) {
+                    // If shared element is null, then it has been scrolled off screen and
+                    // no longer visible. In this case we cancel the shared element transition by
+                    // removing the shared element from the shared elements map.
+                    names.clear();
+                    sharedElements.clear();
+                } else if (startingPosition != currentPosition) {
+                    // If the user has swiped to a different ViewPager page, then we need to
+                    // remove the old shared element and replace it with the new shared element
+                    // that should be transitioned instead.
+                    names.clear();
+                    names.add(sharedElement.getTransitionName());
+                    sharedElements.clear();
+                    sharedElements.put(sharedElement.getTransitionName(), sharedElement);
+                }
             }
         }
     };
@@ -72,11 +75,17 @@ public class ArticleDetailActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         supportPostponeEnterTransition();
         setContentView(R.layout.activity_article_detail);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setEnterSharedElementCallback(callback);
+        }
         Intent intent = getIntent();
         transitionName = intent.getStringExtra(EXTRA_SHARED_TRANSITION);
 
         startingPosition = getIntent().getIntExtra(ArticleListActivity.EXTRA_STARTING_ARTICLE_POSITION, 0);
         if (savedInstanceState == null) {
+            if (getIntent() != null && getIntent().getData() != null) {
+                mStartId = ItemsContract.Items.getItemId(getIntent().getData());
+            }
             currentPosition = startingPosition;
         } else {
             currentPosition = savedInstanceState.getInt(STATE_CURRENT_PAGE_POSITION);
@@ -104,12 +113,6 @@ public class ArticleDetailActivity extends AppCompatActivity
                 currentPosition = position;
             }
         });
-
-        if (savedInstanceState == null) {
-            if (getIntent() != null && getIntent().getData() != null) {
-                mStartId = ItemsContract.Items.getItemId(getIntent().getData());
-            }
-        }
     }
 
     @Override
@@ -120,10 +123,10 @@ public class ArticleDetailActivity extends AppCompatActivity
     }
     @Override
     public void finishAfterTransition() {
-        mIsReturning = true;
+        isReturning = true;
         Intent data = new Intent();
         data.putExtra(ArticleListActivity.EXTRA_STARTING_ARTICLE_POSITION, startingPosition);
-        data.putExtra(EXTRA_CURRENT_POSITION, currentPosition);
+        data.putExtra(ArticleListActivity.EXTRA_CURRENT_ARTICLE_POSITION, currentPosition);
         setResult(RESULT_OK, data);
         super.finishAfterTransition();
     }
@@ -169,7 +172,7 @@ public class ArticleDetailActivity extends AppCompatActivity
         @Override
         public void setPrimaryItem(ViewGroup container, int position, Object object) {
             super.setPrimaryItem(container, position, object);
-            mCurrentDetailsFragment = (ArticleDetailFragment) object;
+            currentDetailsFragment = (ArticleDetailFragment) object;
         }
 
         @Override

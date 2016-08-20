@@ -61,6 +61,7 @@ public class ArticleDetailFragment extends Fragment implements
     private Boolean isSet = false;
     private int position;
     private int startingPosition;
+    private boolean isTransitioning;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -88,6 +89,7 @@ public class ArticleDetailFragment extends Fragment implements
         transitionName = getArguments().getString(ARG_TRANSITION_NAME);
         position = getArguments().getInt(ARG_ARTICLE_IMAGE_POSITION);
         startingPosition = getArguments().getInt(ARG_STARTING_ARTICLE_IMAGE_POSITION);
+        isTransitioning = savedInstanceState == null && startingPosition == position;
 
 
         setHasOptionsMenu(true);
@@ -132,13 +134,9 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
-        mPhotoView.setTransitionName(transitionName);
-
-
-
-
-
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPhotoView.setTransitionName(transitionName);
+        }
 
         mRootView.findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,35 +180,13 @@ public class ArticleDetailFragment extends Fragment implements
                             Bitmap bitmap = imageContainer.getBitmap();
                             if (bitmap != null) {
                                 mPhotoView.setImageBitmap(imageContainer.getBitmap());
-//                                startPostponedEnterTransition();
-//
-//                                Palette palette = new Palette.Builder(bitmap).generate();
-//                                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
-//                                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-//                                if (vibrantSwatch!= null && collapsingToolbar!= null){
-//                                    collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
-//                                }
-//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//                                    if (darkVibrantSwatch != null && getActivity() != null) {
-//                                        Window window = getActivity().getWindow();
-//                                        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-//                                        window.setStatusBarColor(darkVibrantSwatch.getRgb());
-//                                    }
-//                                }
-
-
                             }
                         }
-
                         @Override
                         public void onErrorResponse(VolleyError volleyError) {
 
                         }
                     });
-        } else {
-            titleView.setText("N/A");
-            bylineView.setText("N/A" );
-            bodyView.setText("N/A");
         }
     }
 
@@ -235,7 +211,6 @@ public class ArticleDetailFragment extends Fragment implements
             mCursor = null;
         }
         loadThumbImage();
-
         bindViews();
     }
 
@@ -254,20 +229,21 @@ public class ArticleDetailFragment extends Fragment implements
         isImmersive  = false;
         decorView.setSystemUiVisibility(0);
     }
+
     private void startPostponedEnterTransition() {
         if (position == startingPosition)
         mPhotoView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
                 mPhotoView.getViewTreeObserver().removeOnPreDrawListener(this);
-                getActivity().startPostponedEnterTransition();
+                ((AppCompatActivity)getActivity()).supportStartPostponedEnterTransition();
                 return true;
             }
         });
 
     }
     @Nullable
-    ImageView getAlbumImage() {
+    ImageView getArticleImage() {
         if (isViewInBounds(getActivity().getWindow().getDecorView(), mPhotoView)) {
             return mPhotoView;
         }
