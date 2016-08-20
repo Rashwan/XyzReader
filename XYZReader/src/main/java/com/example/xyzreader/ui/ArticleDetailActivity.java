@@ -1,17 +1,16 @@
 package com.example.xyzreader.ui;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
-import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.SharedElementCallback;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
@@ -91,10 +90,9 @@ public class ArticleDetailActivity extends AppCompatActivity
             currentPosition = savedInstanceState.getInt(STATE_CURRENT_PAGE_POSITION);
         }
 
+        getSupportLoaderManager().initLoader(0,null,this);
 
-        getLoaderManager().initLoader(0, null, this);
-
-        mPagerAdapter = new MyPagerAdapter(getFragmentManager());
+        mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageMargin((int) TypedValue
@@ -111,6 +109,7 @@ public class ArticleDetailActivity extends AppCompatActivity
                     mCursor.moveToPosition(position);
                 }
                 currentPosition = position;
+
             }
         });
     }
@@ -121,14 +120,16 @@ public class ArticleDetailActivity extends AppCompatActivity
         outState.putInt(STATE_CURRENT_PAGE_POSITION, currentPosition);
 
     }
+
+
     @Override
-    public void finishAfterTransition() {
+    public void supportFinishAfterTransition() {
         isReturning = true;
         Intent data = new Intent();
         data.putExtra(ArticleListActivity.EXTRA_STARTING_ARTICLE_POSITION, startingPosition);
         data.putExtra(ArticleListActivity.EXTRA_CURRENT_ARTICLE_POSITION, currentPosition);
         setResult(RESULT_OK, data);
-        super.finishAfterTransition();
+        super.supportFinishAfterTransition();
     }
 
     @Override
@@ -164,7 +165,7 @@ public class ArticleDetailActivity extends AppCompatActivity
     }
 
 
-    private class MyPagerAdapter extends FragmentStatePagerAdapter {
+    private class MyPagerAdapter extends android.support.v4.app.FragmentStatePagerAdapter {
         public MyPagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -178,6 +179,7 @@ public class ArticleDetailActivity extends AppCompatActivity
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
+
             return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID)
                     ,"poster_" + position,position,startingPosition);
         }

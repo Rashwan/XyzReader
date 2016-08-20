@@ -1,9 +1,6 @@
 package com.example.xyzreader.ui;
 
-import android.app.Fragment;
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -12,7 +9,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
@@ -22,6 +22,7 @@ import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -54,14 +55,12 @@ public class ArticleDetailFragment extends Fragment implements
     private View mRootView;
     private CollapsingToolbarLayout collapsingToolbar;
     private ImageView mPhotoView;
-    private Toolbar toolbar;
-    private NestedScrollView scrollView;
     private Boolean isImmersive = false;
     private String transitionName;
-    private Boolean isSet = false;
     private int position;
     private int startingPosition;
-    private boolean isTransitioning;
+    Toolbar toolbar;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -89,9 +88,6 @@ public class ArticleDetailFragment extends Fragment implements
         transitionName = getArguments().getString(ARG_TRANSITION_NAME);
         position = getArguments().getInt(ARG_ARTICLE_IMAGE_POSITION);
         startingPosition = getArguments().getInt(ARG_STARTING_ARTICLE_IMAGE_POSITION);
-        isTransitioning = savedInstanceState == null && startingPosition == position;
-
-
         setHasOptionsMenu(true);
     }
 
@@ -113,15 +109,12 @@ public class ArticleDetailFragment extends Fragment implements
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
 
         toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_details);
-        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("");
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
         collapsingToolbar = (CollapsingToolbarLayout) mRootView.findViewById(R.id.collapsing_toolbar_layout);
 
         final View decorView = getActivity().getWindow().getDecorView();
-        scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
+        NestedScrollView scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
         scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
             @Override
             public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
@@ -150,6 +143,34 @@ public class ArticleDetailFragment extends Fragment implements
 
         bindViews();
         return mRootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getUserVisibleHint()) {
+            setToolbar();
+        }
+
+    }
+
+    private void setToolbar() {
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser && isResumed()){
+            setToolbar();
+        }
     }
 
     private void bindViews() {
@@ -190,13 +211,14 @@ public class ArticleDetailFragment extends Fragment implements
         }
     }
 
+
     @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         if (!isAdded()) {
             if (cursor != null) {
                 cursor.close();
@@ -215,10 +237,11 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
         mCursor = null;
         bindViews();
     }
+
 
     private void hideSystemUI(View decorView) {
         isImmersive = true;
@@ -261,37 +284,47 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     private void loadThumbImage(){
-        ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
-                .get(mCursor.getString(ArticleLoader.Query.THUMB_URL), new ImageLoader.ImageListener() {
-                    @Override
-                    public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
-                        Bitmap bitmap = imageContainer.getBitmap();
-                        if (bitmap != null) {
-                            mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                            startPostponedEnterTransition();
+        if (mCursor != null) {
+            ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
+                    .get(mCursor.getString(ArticleLoader.Query.THUMB_URL), new ImageLoader.ImageListener() {
+                        @Override
+                        public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
+                            Bitmap bitmap = imageContainer.getBitmap();
+                            if (bitmap != null) {
+                                mPhotoView.setImageBitmap(imageContainer.getBitmap());
+                                startPostponedEnterTransition();
 
-                            Palette palette = new Palette.Builder(bitmap).generate();
-                            Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
-                            Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                            if (vibrantSwatch!= null && collapsingToolbar!= null){
-                                collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                if (darkVibrantSwatch != null && getActivity() != null) {
-                                    Window window = getActivity().getWindow();
-                                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                                    window.setStatusBarColor(darkVibrantSwatch.getRgb());
+                                Palette palette = new Palette.Builder(bitmap).generate();
+                                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
+                                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+                                if (vibrantSwatch != null && collapsingToolbar != null) {
+                                    collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
+                                }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    if (darkVibrantSwatch != null && getActivity() != null) {
+                                        Window window = getActivity().getWindow();
+                                        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                                        window.setStatusBarColor(darkVibrantSwatch.getRgb());
+                                    }
                                 }
                             }
+                        }
 
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError) {
 
                         }
-                    }
+                    });
+        }
+    }
 
-                    @Override
-                    public void onErrorResponse(VolleyError volleyError) {
-
-                    }
-                });
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                getActivity().supportFinishAfterTransition();
+                return true;
+        }
+        return false;
     }
 }
