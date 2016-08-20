@@ -12,6 +12,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
@@ -293,12 +294,11 @@ public class ArticleDetailFragment extends Fragment implements
                             if (bitmap != null) {
                                 mPhotoView.setImageBitmap(imageContainer.getBitmap());
                                 startPostponedEnterTransition();
-
-                                Palette palette = new Palette.Builder(bitmap).generate();
+                                int defaultColor = ContextCompat.getColor(getActivity(),R.color.primary);
+                                Palette palette = new Palette.Builder(bitmap).maximumColorCount(16).generate();
                                 Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
-                                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                                if (vibrantSwatch != null && collapsingToolbar != null) {
-                                    collapsingToolbar.setContentScrimColor(vibrantSwatch.getRgb());
+                                if (collapsingToolbar != null) {
+                                    collapsingToolbar.setContentScrimColor(palette.getDominantColor(defaultColor));
                                 }
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                     if (darkVibrantSwatch != null && getActivity() != null) {
