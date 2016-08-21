@@ -57,7 +57,7 @@ public class ArticleListActivity extends AppCompatActivity implements
                     // If startingPosition != currentPosition the user must have swiped to a
                     // different page in the DetailsActivity. We must update the shared element
                     // so that the correct one falls into place.
-                    String newTransitionName = "poster_" + currentPosition;
+                    String newTransitionName = getString(R.string.shared_element_article_image,currentPosition);
                     View newSharedElement = mRecyclerView.findViewWithTag(newTransitionName);
                     if (newSharedElement != null) {
                         names.clear();
@@ -188,7 +188,7 @@ public class ArticleListActivity extends AppCompatActivity implements
     private class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private Cursor mCursor;
 
-        public Adapter(Cursor cursor) {
+        Adapter(Cursor cursor) {
             mCursor = cursor;
         }
 
@@ -201,9 +201,8 @@ public class ArticleListActivity extends AppCompatActivity implements
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = getLayoutInflater().inflate(R.layout.list_item_article, parent, false);
-            final ViewHolder vh = new ViewHolder(view);
 
-            return vh;
+            return new ViewHolder(view);
         }
 
         @Override
@@ -227,14 +226,14 @@ public class ArticleListActivity extends AppCompatActivity implements
         private int articlePosition;
         private long articleId;
 
-        public ViewHolder(View view) {
+        ViewHolder(View view) {
             super(view);
             view.setOnClickListener(this);
             thumbnailView = (DynamicHeightNetworkImageView) view.findViewById(R.id.thumbnail);
             titleView = (TextView) view.findViewById(R.id.article_title);
             subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
         }
-        public void bind(Cursor mCursor){
+        void bind(Cursor mCursor){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 thumbnailView.setTransitionName("poster_" + mCursor.getPosition());
             }

@@ -105,17 +105,14 @@ public class ArticleDetailFragment extends Fragment implements
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+
         final View decorView = getActivity().getWindow().getDecorView();
-
         showSystemUI(decorView);
+
         toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_details);
-
-
         collapsingToolbar = (CollapsingToolbarLayout) mRootView.findViewById(R.id.collapsing_toolbar_layout);
-
         NestedScrollView scrollView = (NestedScrollView) mRootView.findViewById(R.id.scrollview);
         scrollView.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
             @Override
@@ -158,7 +155,7 @@ public class ArticleDetailFragment extends Fragment implements
 
     private void setToolbar() {
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(false);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 

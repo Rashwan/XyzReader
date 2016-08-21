@@ -36,7 +36,6 @@ public class ArticleDetailActivity extends AppCompatActivity
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-    private String transitionName;
     private int currentPosition;
     public final static String EXTRA_SHARED_TRANSITION = "com.example.xyzreader.ui.EXTRA_SHARED_TRANSITION";
     private static final String STATE_CURRENT_PAGE_POSITION = "state_current_page_position";
@@ -77,8 +76,6 @@ public class ArticleDetailActivity extends AppCompatActivity
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             setEnterSharedElementCallback(callback);
         }
-        Intent intent = getIntent();
-        transitionName = intent.getStringExtra(EXTRA_SHARED_TRANSITION);
 
         startingPosition = getIntent().getIntExtra(ArticleListActivity.EXTRA_STARTING_ARTICLE_POSITION, 0);
         if (savedInstanceState == null) {
@@ -118,7 +115,6 @@ public class ArticleDetailActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_CURRENT_PAGE_POSITION, currentPosition);
-
     }
 
 
@@ -181,7 +177,7 @@ public class ArticleDetailActivity extends AppCompatActivity
             mCursor.moveToPosition(position);
 
             return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID)
-                    ,"poster_" + position,position,startingPosition);
+                    ,getString(R.string.shared_element_article_image,position),position,startingPosition);
         }
 
         @Override
